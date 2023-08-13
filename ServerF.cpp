@@ -1,5 +1,4 @@
-﻿
-#define WIN32_LEAN_AND_MEAN
+﻿#define WIN32_LEAN_AND_MEAN
 
 #include <iostream>
 #pragma comment(lib,"ws2_32.lib")
@@ -10,28 +9,50 @@
 
 SOCKET Connections[100];
 int Counter;
+bool isHaveGame = false;
 
-void ClientPrecieve(int index)
+void ServerLogic(int index)
 {
 	char buffer[522];
 	char msg[512];
-	while (true) {
-		int result = 0;
-		int result2 = 0;
-		result = recv(Connections[index], buffer, sizeof(buffer), NULL);
-		result2 = recv(Connections[index], msg, sizeof(msg), NULL);
-		if (result > 0 && result2 > 0)
+	int result = 0;
+	int result2 = 0;
+	result = recv(Connections[index], buffer, sizeof(buffer), NULL);
+	result2 = recv(Connections[index], msg, sizeof(msg), NULL);
+	if (isHaveGame == false && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
+		|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
+	{
+		char message[512] = "Click 1 to join game or 0 to refuse";
+		for (int i = 0; i < Counter; i++)
 		{
-			for (int i = 0; i < Counter; i++)
-			{
-				if (i == index)continue;
+			if (i == index)continue;
 
-				send(Connections[i], buffer, sizeof(buffer), NULL);
-				send(Connections[i], msg, sizeof(msg), NULL);
-			}
+
+			send(Connections[i], buffer, sizeof(buffer), NULL);
+			send(Connections[i], message, sizeof(message), NULL);
+		}
+		isHaveGame = true;
+	}
+	else if (isHaveGame == true && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
+		|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
+	{
+		char message[512] = "! you Cant create a game becauce,In server already have a game";
+		for (int i = 0; i < Counter; i++)
+		{
+			if (i != index)continue;
+
+
+			send(Connections[i], buffer, sizeof(buffer), NULL);
+			send(Connections[i], message, sizeof(message), NULL);
 		}
 	}
 }
+
+void ClientPrecieve(int index)
+{
+	ServerLogic(index);
+}
+
 int main(int argc, char* argv[])
 {
 	WSAData wsaData;
@@ -62,7 +83,7 @@ int main(int argc, char* argv[])
 		}
 		else {
 			std::cout << "Client Connected!\n";
-			char msg[256] = "Hello. It's my first network mprogram!";
+			char msg[256] = "Hello to the game";
 			send(newConnection, msg, sizeof(msg), NULL);
 			Connections[i] = newConnection;
 			Counter++;
