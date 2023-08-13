@@ -15,35 +15,39 @@ void ServerLogic(int index)
 {
 	char buffer[522];
 	char msg[512];
-	int result = 0;
-	int result2 = 0;
-	result = recv(Connections[index], buffer, sizeof(buffer), NULL);
-	result2 = recv(Connections[index], msg, sizeof(msg), NULL);
-	if (isHaveGame == false && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
-		|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
+	while (true)
 	{
-		char message[512] = "Click 1 to join game or 0 to refuse";
-		for (int i = 0; i < Counter; i++)
+		int result = 0;
+		int result2 = 0;
+
+		result = recv(Connections[index], buffer, sizeof(buffer), NULL);
+		result2 = recv(Connections[index], msg, sizeof(msg), NULL);
+		if (isHaveGame == false && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
+			|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
 		{
-			if (i == index)continue;
+			char message[512] = "Click 1 to join game or 0 to refuse";
+			for (int i = 0; i < Counter; i++)
+			{
+				if (i == index)continue;
 
 
-			send(Connections[i], buffer, sizeof(buffer), NULL);
-			send(Connections[i], message, sizeof(message), NULL);
+				send(Connections[i], buffer, sizeof(buffer), NULL);
+				send(Connections[i], message, sizeof(message), NULL);
+			}
+			isHaveGame = true;
 		}
-		isHaveGame = true;
-	}
-	else if (isHaveGame == true && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
-		|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
-	{
-		char message[512] = "! you Cant create a game becauce,In server already have a game";
-		for (int i = 0; i < Counter; i++)
+		else if (isHaveGame == true && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
+			|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
 		{
-			if (i != index)continue;
+			char message[512] = "! you Cant create a game becauce,In server already have a game";
+			for (int i = 0; i < Counter; i++)
+			{
+				if (i != index)continue;
 
 
-			send(Connections[i], buffer, sizeof(buffer), NULL);
-			send(Connections[i], message, sizeof(message), NULL);
+				send(Connections[i], buffer, sizeof(buffer), NULL);
+				send(Connections[i], message, sizeof(message), NULL);
+			}
 		}
 	}
 }
