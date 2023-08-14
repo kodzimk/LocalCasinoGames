@@ -10,22 +10,90 @@
 SOCKET Connections[100];
 int Counter;
 bool isHaveGame = false;
+bool isConfirm[100];
+int invitingUserIndex = -1;
+int giveAnswerPlayerCount = 0;
+bool startgame;
+std::string finNumber;
+bool wait;
 
 void ServerLogic(int index)
 {
 	char buffer[522];
 	char msg[512];
+
 	while (true)
 	{
+		
 		int result = 0;
 		int result2 = 0;
 
 		result = recv(Connections[index], buffer, sizeof(buffer), NULL);
 		result2 = recv(Connections[index], msg, sizeof(msg), NULL);
-		if (isHaveGame == false && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
-			|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
+		if (msg[0]>='0') {
+			send(Connections[invitingUserIndex], buffer, 522, 0);
+			send(Connections[invitingUserIndex], msg, 512, 0);
+		}
+		else if (giveAnswerPlayerCount == Counter-1 && startgame==false)
 		{
-			char message[512] = "Click 1 to join game or 0 to refuse";
+			char message[512] = "All player end a give them answer you can start a game";
+			send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
+			send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+			giveAnswerPlayerCount = 0;
+			startgame = true;
+		}
+		else if (startgame == true && wait==false)
+		{
+			finNumber = msg;
+			char name[522] = "Server";
+			char message[512] = "-";
+			for (int i = 0; i < Counter; i++)
+			{
+				if (isConfirm[i] == true)
+				{
+					send(Connections[i], name, 522, 0);
+					send(Connections[i], message, sizeof(message), NULL);
+				}
+			}
+			wait == true;
+		}
+		else if (startgame == true && msg[0]=='p')
+		{
+			char name[522] = "Server";
+			for (int i = 0; i < Counter; i++)
+			{
+				if (isConfirm[i] == true)
+				{
+					send(Connections[i], name, 522, 0);
+					send(Connections[i], msg, sizeof(msg), NULL);
+				}
+			}
+			wait == true;
+		}
+		else if (invitingUserIndex != -1 && startgame==false)
+		{	
+			if (msg[0] == '0')
+			{
+				char message[512] = "Reject";
+				giveAnswerPlayerCount++;
+				send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
+				send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+			}
+			if (msg[0] == '1')
+			{
+				isConfirm[index] = true;
+				giveAnswerPlayerCount++;
+				char message[512] = "Confirm";
+				send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
+				send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+			}
+		}
+		else if (isHaveGame == false  && msg[0] == 's'&&msg[1]=='t')
+		{
+
+			invitingUserIndex = index;
+			char message[512] = "? Click 1 to join game or 0 to refuse";
+
 			for (int i = 0; i < Counter; i++)
 			{
 				if (i == index)continue;
@@ -34,11 +102,12 @@ void ServerLogic(int index)
 				send(Connections[i], buffer, sizeof(buffer), NULL);
 				send(Connections[i], message, sizeof(message), NULL);
 			}
+
 			isHaveGame = true;
 		}
-		else if (isHaveGame == true && result > 0 && result2 > 0 && ((msg[0] == 's' && msg[1] == 't' && msg[2] == 'a' && msg[3] == 'r' && msg[4] == 't')
-			|| (msg[0] == 'S' && msg[1] == 'T' && msg[2] == 'A' && msg[3] == 'R' && msg[4] == 'T')))
-		{
+		else if (isHaveGame == true  && msg=="start")
+	    {
+		
 			char message[512] = "! you Cant create a game becauce,In server already have a game";
 			for (int i = 0; i < Counter; i++)
 			{
@@ -49,6 +118,18 @@ void ServerLogic(int index)
 				send(Connections[i], message, sizeof(message), NULL);
 			}
 		}
+		else if(startgame==false)
+		{
+			for (int i = 0; i < Counter; i++)
+			{
+				if (i == index)continue;
+
+				send(Connections[i], buffer, sizeof(buffer), 0);
+				send(Connections[i], msg, sizeof(msg), 0);
+			}
+		}
+
+	
 	}
 }
 
