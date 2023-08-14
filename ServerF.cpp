@@ -30,11 +30,8 @@ void ServerLogic(int index)
 
 		result = recv(Connections[index], buffer, sizeof(buffer), NULL);
 		result2 = recv(Connections[index], msg, sizeof(msg), NULL);
-		if (msg[0]>='0') {
-			send(Connections[invitingUserIndex], buffer, 522, 0);
-			send(Connections[invitingUserIndex], msg, 512, 0);
-		}
-		else if (giveAnswerPlayerCount == Counter-1 && startgame==false)
+
+		 if (giveAnswerPlayerCount == Counter-1 && startgame==false)
 		{
 			char message[512] = "All player end a give them answer you can start a game";
 			send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
