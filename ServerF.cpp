@@ -15,7 +15,8 @@ int invitingUserIndex = -1;
 int giveAnswerPlayerCount = 0;
 bool startgame;
 std::string finNumber;
-bool wait;
+int Count;
+
 
 void ServerLogic(int index)
 {
@@ -31,43 +32,75 @@ void ServerLogic(int index)
 		result = recv(Connections[index], buffer, sizeof(buffer), NULL);
 		result2 = recv(Connections[index], msg, sizeof(msg), NULL);
 
-		 if (giveAnswerPlayerCount == Counter-1 && startgame==false)
+		if (Count == giveAnswerPlayerCount&& startgame == true)
 		{
-			char message[512] = "All player end a give them answer you can start a game";
-			send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
+			char message[522] = "Server";
+			char mess[512] = "Game succefuly ended";
 			send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+			send(Connections[invitingUserIndex], mess, sizeof(mess), NULL);
+			isHaveGame = false;
+			invitingUserIndex = -1;
+			finNumber = "";
+			Count = 0;
 			giveAnswerPlayerCount = 0;
-			startgame = true;
+			startgame = false;
+			for (int i = 0; i < 100; i++)
+			{
+				isConfirm[i] = false;
+		    }
 		}
-		else if (startgame == true && wait==false)
+		else if (index!= invitingUserIndex && result > 0 && startgame == true)
 		{
-			finNumber = msg;
+			
+			if (finNumber[0] == msg[0])
+			{
+				char message[512] = "Correct";
+				char name[522] = "Server";
+				send(Connections[index], name, 522, 0);
+				send(Connections[index], message, sizeof(message), NULL);
+				Count++;
+			}
+			else {
+				Count++;
+				char message[512] = "Wrong";
+				char name[522] = "Server";
+				send(Connections[index], name, 522, 0);
+				send(Connections[index], message, sizeof(message), NULL);
+			}
+		}
+		else if  (giveAnswerPlayerCount == Counter-1&& msg[0] == 'p'&&startgame==false&&isHaveGame==true)
+		{
 			char name[522] = "Server";
-			char message[512] = "-";
+			char message[512] = "Game Started";
+			giveAnswerPlayerCount = 0;
 			for (int i = 0; i < Counter; i++)
 			{
 				if (isConfirm[i] == true)
 				{
+					giveAnswerPlayerCount++;
 					send(Connections[i], name, 522, 0);
 					send(Connections[i], message, sizeof(message), NULL);
 				}
 			}
-			wait == true;
+			send(Connections[invitingUserIndex], name, 522, 0);
+			send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+			startgame = true;
 		}
-		else if (startgame == true && msg[0]=='p')
+		else if (startgame == true&&finNumber=="")
 		{
-			char name[522] = "Server";
-			for (int i = 0; i < Counter; i++)
-			{
-				if (isConfirm[i] == true)
+			
+				char name[522] = "Server";
+				for (int i = 0; i < Counter; i++)
 				{
-					send(Connections[i], name, 522, 0);
-					send(Connections[i], msg, sizeof(msg), NULL);
+					if (isConfirm[i] == true)
+					{
+						send(Connections[i], name, 522, 0);
+						send(Connections[i], msg, sizeof(msg), NULL);
+					}
 				}
-			}
-			wait == true;
-		}
-		else if (invitingUserIndex != -1 && startgame==false)
+				finNumber[0] = msg[0];
+			}	
+		else if (invitingUserIndex != -1 && startgame==false&&isHaveGame==true)
 		{	
 			if (msg[0] == '0')
 			{
@@ -115,7 +148,7 @@ void ServerLogic(int index)
 				send(Connections[i], message, sizeof(message), NULL);
 			}
 		}
-		else if(startgame==false)
+		else if(startgame==false&&result>0&&result2>0)
 		{
 			for (int i = 0; i < Counter; i++)
 			{
@@ -124,9 +157,7 @@ void ServerLogic(int index)
 				send(Connections[i], buffer, sizeof(buffer), 0);
 				send(Connections[i], msg, sizeof(msg), 0);
 			}
-		}
-
-	
+		}	
 	}
 }
 
