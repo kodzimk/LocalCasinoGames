@@ -3,6 +3,7 @@
 #include <iostream>
 #pragma comment(lib,"ws2_32.lib")
 #include<WinSock2.h>
+#include<algorithm>
 #include<string>
 #pragma warning(disable: 4996)
 #include<WS2tcpip.h>
@@ -16,6 +17,7 @@ int giveAnswerPlayerCount = 0;
 bool startgame;
 std::string finNumber;
 int Count;
+int eachusermoney[100];
 
 
 void ServerLogic(int index)
@@ -49,12 +51,23 @@ void ServerLogic(int index)
 				isConfirm[i] = false;
 		    }
 		}
+		else if (msg[0] == 'b' && msg[1] == 'a' && msg[2] == 'l')
+		{
+			std::string message = std::to_string(eachusermoney[index]);
+			char message2[512];
+			strcpy(message2, message.c_str());
+			char name[522] = "Server";
+			message[0] = (char)eachusermoney[index];
+			send(Connections[index], name, 522, 0);
+			send(Connections[index], message2, 512, 0);
+		}
 		else if (index!= invitingUserIndex && result > 0 && startgame == true)
 		{
 			
 			if (finNumber[0] == msg[0])
 			{
-				char message[512] = "Correct";
+				eachusermoney[index] += 200;
+				char message[512] = "Correct you win 200$ for your balance enter 'balance' to see how much money do you have";
 				char name[522] = "Server";
 				send(Connections[index], name, 522, 0);
 				send(Connections[index], message, sizeof(message), NULL);
@@ -111,11 +124,26 @@ void ServerLogic(int index)
 			}
 			if (msg[0] == '1')
 			{
-				isConfirm[index] = true;
-				giveAnswerPlayerCount++;
-				char message[512] = "Confirm";
-				send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
-				send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+				if (eachusermoney[index] >= 100)
+				{
+					eachusermoney[index] -= 100;
+					isConfirm[index] = true;
+					giveAnswerPlayerCount++;
+					char message[512] = "Confirm";
+					send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
+					send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+					
+					
+				}
+				else {
+					char message[512] = "Reject";
+					giveAnswerPlayerCount++;
+					send(Connections[invitingUserIndex], buffer, sizeof(buffer), NULL);
+					send(Connections[invitingUserIndex], message, sizeof(message), NULL);
+					char mess[512] = "You dont have money";
+					send(Connections[index], buffer, sizeof(buffer), NULL);
+					send(Connections[index], mess, sizeof(mess), NULL);
+				}
 			}
 		}
 		else if (isHaveGame == false  && msg[0] == 's'&&msg[1]=='t')
@@ -148,7 +176,7 @@ void ServerLogic(int index)
 				send(Connections[i], message, sizeof(message), NULL);
 			}
 		}
-		else if(startgame==false&&result>0&&result2>0)
+		else if(startgame==false)
 		{
 			for (int i = 0; i < Counter; i++)
 			{
@@ -196,7 +224,8 @@ int main(int argc, char* argv[])
 		}
 		else {
 			std::cout << "Client Connected!\n";
-			char msg[256] = "Hello to the game";
+			char msg[256] = "Hello to the game Your Balance 200$";
+			eachusermoney[i] = 200;
 			send(newConnection, msg, sizeof(msg), NULL);
 			Connections[i] = newConnection;
 			Counter++;
